@@ -1,32 +1,83 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from config import settings
 from db import get_session
-from models.user import UserCredential, LoginSchema
-from security.auth import authenticate_user
-from security.jwt import create_access_token
+
+from models.user import User, RegisterSchema, LoginSchema
+
+from security.auth import authenticate_user, get_password_hash
+from security.jwt import create_access_token, get_current_user
 
 router = APIRouter(tags=["authentication"])
 
 
-@router.post("/login", status_code=status.HTTP_200_OK, response_model=UserCredential)
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+def register(req_body: RegisterSchema, db: Session = Depends(get_session)):
+    """Create a new user with hashed password"""
+    # get user by email
+    existing_user = db.exec(select(User).where(User.email == req_body.email)).first()
+    # check if exist
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+    # hash password
+    hashed_password = get_password_hash(req_body.password)
+    # save to db
+    db_user = User(
+        username=req_body.username,
+        email=req_body.email,
+        hashed_password=hashed_password,
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    # return response
+    return {
+        "message": "successful account registration",
+        "result": {
+            "username": req_body.username,
+            "email": req_body.email,
+        },
+    }
+
+
+@router.post("/login", status_code=status.HTTP_200_OK)
 async def login(req_body: LoginSchema, db: Session = Depends(get_session)):
     """Endpoint for user authentication and token generation"""
-    # Authenticate the user
+    # authenticate user credential
     user = authenticate_user(db, req_body.email, req_body.password)
-
+    # if credential does not match
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
-
-    # Create access token
+    # generate access token for session
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
+    # return response
+    return {
+        "message": "successful login",
+        "result": {
+            "access_token": access_token,
+            "token_type": "Bearer",
+        },
+    }
 
-    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/auth", status_code=status.HTTP_200_OK)
+def get_auth_session(user: User = Depends(get_current_user)):
+    """Get current user information"""
+    return {
+        "message": "session authenticated",
+        "result": {
+            "username": user.username,
+            "email": user.email,
+        },
+    }

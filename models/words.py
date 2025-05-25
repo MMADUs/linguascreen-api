@@ -1,16 +1,17 @@
-from typing import Optional
-from sqlmodel import Field, SQLModel
+from typing import Optional, TYPE_CHECKING
+
+from sqlmodel import Field, SQLModel, Relationship
+
+if TYPE_CHECKING:
+    from .sentences import Sentences
 
 
 class WordsBase(SQLModel):
     """Base model for saved words"""
 
-    original: str
-    original_lang: str
-    translation: str
-    translation_lang: str
-    description: Optional[str] = None
-    user_id: Optional[int] = None
+    word: str
+    desc: str
+    sentences_id: Optional[int] = Field(default=None, foreign_key="sentences.id")
 
 
 class Words(WordsBase, table=True):
@@ -18,15 +19,4 @@ class Words(WordsBase, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
-
-# Words schema
-class WordsPayload(WordsBase):
-    """Schema for item creation"""
-
-    pass
-
-
-class WordsResponse(WordsBase):
-    """Schema for item response"""
-
-    id: int
+    sentences: Optional["Sentences"] = Relationship(back_populates="words")

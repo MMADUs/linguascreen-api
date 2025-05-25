@@ -2,15 +2,15 @@ from fastapi import FastAPI
 
 from config import settings
 from db import create_db_and_tables
-from routers import auth, user, words
+from routers import auth, sentences, gateway
 
-# Create FastAPI app
+# main app
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 
-# Include routers
+# add routers
 app.include_router(auth.router)
-app.include_router(user.router)
-app.include_router(words.router)
+app.include_router(sentences.router)
+app.include_router(gateway.router)
 
 
 @app.on_event("startup")

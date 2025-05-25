@@ -2,11 +2,11 @@ from sqlmodel import SQLModel, create_engine, Session
 
 from config import settings
 
-# Create SQLite engine
+# Create database engine (sqlite by default)
 engine = create_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
-    connect_args={"check_same_thread": False},  # Only needed for SQLite
+    connect_args={"check_same_thread": False},  # Only needed for sqlite
 )
 
 
@@ -19,4 +19,3 @@ def get_session():
     """Dependency for database session"""
     with Session(engine) as session:
         yield session
-

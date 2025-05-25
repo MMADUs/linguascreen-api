@@ -1,4 +1,5 @@
 from typing import Optional
+
 from sqlmodel import Field, SQLModel
 from pydantic import BaseModel
 
@@ -29,17 +30,3 @@ class RegisterSchema(UserBase):
     """Schema for user creation"""
 
     password: str
-
-
-class UserResponse(UserBase):
-    """Schema for user response"""
-
-    id: int
-
-
-# Auth schema
-class UserCredential(BaseModel):
-    """Schema for token response"""
-
-    access_token: str
-    token_type: str
