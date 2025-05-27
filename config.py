@@ -1,7 +1,21 @@
-from typing import Optional
+# Copyright (c) 2024-2025 LinguaScreen, Inc.
+#
+# This file is part of LinguaScreen Server
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from pydantic_settings import BaseSettings
-from pydantic import field_validator, ValidationInfo
 
 from dotenv import load_dotenv
 
@@ -16,7 +30,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Database settings
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite:///./app.db"
 
     # Security settings
     SECRET_KEY: str = "default-secret-key"
@@ -26,7 +40,6 @@ class Settings(BaseSettings):
     # Azure credential settings
 
     # text-translation credentials
-    # AZURE_TEXT_TRANSLATION_ENDPOINT: Optional[str]
     AZURE_TEXT_TRANSLATION_API_KEY: str
     AZURE_TEXT_TRANSLATION_REGION: str = "southeastasia"
 
@@ -38,25 +51,6 @@ class Settings(BaseSettings):
     AZURE_LLM_OPENAI_API_VERSION: str = "2024-10-21"
     AZURE_LLM_OPENAI_API_KEY: str
     AZURE_LLM_OPENAI_ENDPOINT: str
-
-    # Validators
-    @field_validator("DATABASE_URL")
-    def validate_database_url(cls, v: Optional[str], info: ValidationInfo) -> str:
-        if not v:
-            raise ValueError("DATABASE_URL must be set")
-        return v
-
-    @field_validator("AZURE_TEXT_TRANSLATION_API_KEY")
-    def validate_translation_credential(
-        cls, v: Optional[str], info: ValidationInfo
-    ) -> str:
-        if not v:
-            raise ValueError("Azure text-translation api-key must be set")
-        return v
-
-    # @model_validator(mode="after")
-    # def validate_ocr_credentials():
-    #     None
 
     class Config:
         env_file = ".env"
