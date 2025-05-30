@@ -23,7 +23,7 @@ from sqlmodel import Session, select
 from db import get_session
 
 from core.translation import translation_service, TranslationResponse
-from core.ocr import ocr_service, ImageOcrResponse
+from core.ocr import raw_ocr_service, ocr_service, ImageOcrResponse
 from core.llm import llm_service, LLMResponse
 
 from models.sentences import Sentences
@@ -33,6 +33,15 @@ from models.user import User
 from security.jwt import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
+
+
+@router.post("/ocr", status_code=status.HTTP_200_OK)
+async def ocr(image: UploadFile = File(...)):
+    img_buf: bytes = await image.read()
+
+    ocr_result = raw_ocr_service(img_buf)
+
+    return {"result": ocr_result}
 
 
 @router.post("/image", status_code=status.HTTP_200_OK)
