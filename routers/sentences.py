@@ -31,7 +31,7 @@ router = APIRouter(prefix="/sentence", tags=["saved sentences"])
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def read_words(
+def get_sentences(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_session),
@@ -49,8 +49,9 @@ def read_words(
     }
 
 
+# NOTE: currently each word is only shown by fetching sentence by id for performance reason.
 @router.get("/{id}", status_code=status.HTTP_200_OK)
-def read_words_by_id(
+def get_sentence_by_id(
     id: int,
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),
@@ -94,7 +95,7 @@ def read_words_by_id(
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_words(
+def delete_sentence(
     id: int,
     db: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
