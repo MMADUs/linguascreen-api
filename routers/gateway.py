@@ -26,7 +26,7 @@ from core.translation import translation_service, TranslationResponse
 from core.ocr import raw_ocr_service, ocr_service, ImageOcrResponse
 from core.llm import llm_service, LLMResponse
 
-from models.sentences import Sentences
+from models.sentences import Sentences, TranslationReqBody
 from models.words import Words
 from models.user import User
 
@@ -35,17 +35,39 @@ from security.jwt import get_current_user
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
+@router.post("/translate", status_code=status.HTTP_200_OK)
+async def translate(req_body: TranslationReqBody):
+    """API for text translation only"""
+    # translate
+    translation_result: TranslationResponse = translation_service(
+        req_body.to_language, req_body.sentences
+    )
+    # return response
+    return {
+        "message": "successful text translation",
+        "result": {
+            "raw": translation_result.input_text,
+            "result": translation_result.translation,
+            "from_language": translation_result.detected_language,
+            "to_language": req_body.to_language,
+            "score": translation_result.score,
+        },
+    }
+
+
 @router.post("/ocr", status_code=status.HTTP_200_OK)
 async def ocr(image: UploadFile = File(...)):
+    """API for image analysis only"""
+    # read image content
     img_buf: bytes = await image.read()
-
+    # scan image
     ocr_result = raw_ocr_service(img_buf)
-
-    return {"result": ocr_result}
+    # return response
+    return {"message": "successful image analysis", "result": ocr_result}
 
 
 @router.post("/image", status_code=status.HTTP_200_OK)
-async def image_to_text(
+async def image_translation(
     to_language: str = Form(...),
     image: UploadFile = File(...),
     db: Session = Depends(get_session),
@@ -90,8 +112,10 @@ async def image_to_text(
     }
 
 
+# NOTE: we can hit this api multiple times to regenerate the entire explanation of the sentences.
+#       but the explanation for each word will only be explained once & does not replace existing words.
 @router.patch("/llm/{id}", status_code=status.HTTP_200_OK)
-async def describe_by_llm(
+async def llm_explanation(
     id: int,
     db: Session = Depends(get_session),
     user: User = Depends(get_current_user),

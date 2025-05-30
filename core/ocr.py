@@ -45,6 +45,7 @@ class ImageOcrResponse:
 # TODO: integrate bounding box polygon information to ocr_service
 # TODO: implement auth when prod
 def raw_ocr_service(image_buffer: bytes) -> ImageAnalysisResult:
+    """Raw response OCR Image to text api service"""
     try:
         response = ocr_client.analyze(image_data=image_buffer, visual_features=[VisualFeatures.READ])
         return response

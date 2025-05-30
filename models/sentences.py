@@ -18,6 +18,7 @@
 from typing import Optional, List
 
 from sqlmodel import Field, SQLModel, Relationship
+from pydantic import BaseModel
 
 from .words import Words
 
@@ -41,3 +42,10 @@ class Sentences(SentencesBase, table=True):
     # relationship to words
     words: List[Words] = Relationship(back_populates="sentences")
 
+
+# schema
+class TranslationReqBody(BaseModel):
+    """Api translation request body schema"""
+
+    to_language: str
+    sentences: str
