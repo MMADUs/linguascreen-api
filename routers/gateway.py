@@ -26,7 +26,7 @@ from db import get_session
 
 from core.translation import translation_service, TranslationResponse
 from core.ocr import raw_ocr_service, ocr_service, ImageOcrResponse
-from core.llm import llm_service, LLMResponse, WordsExplanation
+from core.llm import llm_service, llm_explaination_service, LLMResponse, WordsExplanation
 
 from models.sentences import Sentences, TranslationReqBody
 from models.words import Words
@@ -35,7 +35,6 @@ from models.user import User
 from security.jwt import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["AI"])
-
 
 class TranslateResponseModel(BaseModel):
     """Response model for translation API"""
@@ -84,6 +83,37 @@ async def ocr(image: UploadFile = File(...)):
     # return response
     return {"message": "successful image analysis", "result": ocr_result}
 
+class ExplainRequestBody(BaseModel):
+    """Request body for LLM explanation"""
+    original_sentence: str
+    translated_sentence: str
+    original_lang: str
+    target_lang: str
+
+class ExplainResponseModel(BaseModel):
+    """Response model for LLM explanation"""
+    message: str
+    result: LLMResponse
+
+@router.post("/explain", status_code=status.HTTP_200_OK, response_model=ExplainResponseModel)
+async def explain(req_body: ExplainRequestBody):
+    """API for LLM explanation"""
+    result = llm_explaination_service(req_body.original_sentence,
+                            req_body.translated_sentence,
+                            req_body.original_lang,
+                            req_body.target_lang)
+    return {
+            "message": "successful LLM explanation",
+            "result": {
+                "words_explanation": result.words_explanation,
+                "entire_explanation": result.entire_explanation,
+                "original_sentence": result.original_sentence,
+                "translated_sentence": result.translated_sentence,
+                "prompt_tokens": result.prompt_tokens,
+                "completion_tokens": result.completion_tokens,
+            }
+        }
+    
 
 @router.post("/image", status_code=status.HTTP_200_OK)
 async def image_translation(
@@ -161,6 +191,8 @@ class LLMExplanationResponse(BaseModel):
     metadata: MetadataModel
     result: ResultModel
 
+
+# TODO: uhh I don't know how I'm supposed to get id
 # NOTE: we can hit this api multiple times to regenerate the entire explanation of the sentences.
 #       but the explanation for each word will only be explained once & does not replace existing words.
 @router.patch("/llm/{id}", status_code=status.HTTP_200_OK, response_model=LLMExplanationResponse)

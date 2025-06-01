@@ -26,7 +26,8 @@ from models.words import WordsBase
 class WordsExplanation(BaseModel):
     """Words Explanation Response"""
 
-    each_word: str
+    original_word: str
+    translated_word: str
     explanation: str
 
 
@@ -40,12 +41,49 @@ class FormatResponse(BaseModel):
 class LLMResponse(FormatResponse):
     """LLM Response Schema"""
 
-    raw: str
-    translated: str
+    original_sentence: str
+    translated_sentence: str
     prompt_tokens: int
     completion_tokens: int
 
+def llm_explaination_service(original_sentence: str, translated_sentence: str, original_lang: str, target_lang: str):
+    prompt = (f"""
+              You are a language expert, and your task is to explain the meaning of the given sentences in {target_lang.upper()} language.
+              The original sentence is: {original_sentence}.
+              The original sentence language is: {original_lang.upper()}.
+              The translated sentence is: {translated_sentence}.
+              Please provide a simple and easy-to-understand explanation for both sentences.
+              Provide an explanation for each word in the original sentence based on the context, and do not explain duplicated words.
+              """)
+    
+    response = llm_client.beta.chat.completions.parse(
+        messages=[
+            {
+                "role": "system",
+                "content": prompt,
+            },
+        ],
+        max_tokens=4096,
+        response_format=FormatResponse,
+        model="gpt-4o-mini-2",
+    )
 
+    choice = response.choices[0]
+    base = choice.message.parsed
+    if base is None:
+        raise ValueError("LLM response parsing failed, no data returned")
+    
+    return LLMResponse(
+        words_explanation=base.words_explanation,
+        entire_explanation=base.entire_explanation,
+        original_sentence=original_sentence,
+        translated_sentence=translated_sentence,
+        prompt_tokens=response.usage.prompt_tokens,
+        completion_tokens=response.usage.completion_tokens,
+    )
+
+
+# I'll put this on the backlog for now
 def llm_service(data: WordsBase) -> LLMResponse:
     """LLM api service"""
     # prepare prompt
@@ -77,8 +115,8 @@ def llm_service(data: WordsBase) -> LLMResponse:
     return LLMResponse(
         words_explanation=base.words_explanation,
         entire_explanation=base.entire_explanation,
-        raw=data.original,
-        translated=data.translation,
+        original_sentence=data.original,
+        translated_sentence=data.translation,
         prompt_tokens=response.usage.prompt_tokens,
         completion_tokens=response.usage.completion_tokens,
     )
