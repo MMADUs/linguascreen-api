@@ -43,7 +43,31 @@ class LoginSchema(BaseModel):
     password: str
 
 
+class LoginResponse(BaseModel):
+    """Response model for user login"""
+
+    class TokenModel(BaseModel):
+        """Token result model for login response"""
+
+        access_token: str
+        token_type: str = "Bearer"
+        
+    message: str
+    result: TokenModel
+
 class RegisterSchema(UserBase):
     """Schema for user creation"""
 
     password: str
+
+class RegisterResponse(BaseModel):
+    """Response model for user registration"""
+
+    message: str
+    result: UserBase
+
+class AuthResponse(BaseModel):
+    """Response model for user authentication"""
+
+    message: str
+    result: UserBase

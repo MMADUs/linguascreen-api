@@ -22,7 +22,7 @@ from sqlmodel import Session, select
 from config import settings
 from db import get_session
 
-from models.user import User, RegisterSchema, LoginSchema
+from models.user import User, RegisterSchema, RegisterResponse, LoginSchema, LoginResponse
 
 from security.auth import authenticate_user, get_password_hash
 from security.jwt import create_access_token, get_current_user
@@ -30,7 +30,7 @@ from security.jwt import create_access_token, get_current_user
 router = APIRouter(tags=["authentication"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
 def register(req_body: RegisterSchema, db: Session = Depends(get_session)):
     """Create a new user with hashed password"""
     # get user by email
@@ -62,7 +62,7 @@ def register(req_body: RegisterSchema, db: Session = Depends(get_session)):
     }
 
 
-@router.post("/login", status_code=status.HTTP_200_OK)
+@router.post("/login", status_code=status.HTTP_200_OK, response_model=LoginResponse)
 async def login(req_body: LoginSchema, db: Session = Depends(get_session)):
     """Endpoint for user authentication and token generation"""
     # authenticate user credential
@@ -88,7 +88,7 @@ async def login(req_body: LoginSchema, db: Session = Depends(get_session)):
     }
 
 
-@router.get("/auth", status_code=status.HTTP_200_OK)
+@router.get("/auth", status_code=status.HTTP_200_OK, response_model=LoginResponse)
 def get_auth_session(user: User = Depends(get_current_user)):
     """Get current user information"""
     return {
