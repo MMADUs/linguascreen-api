@@ -26,7 +26,7 @@ from db import get_session
 
 from core.translation import translation_service, TranslationResponse
 from core.ocr import raw_ocr_service, ocr_service, ImageOcrResponse
-from core.llm import llm_service, LLMResponse
+from core.llm import llm_service, LLMResponse, WordsExplanation
 
 from models.sentences import Sentences, TranslationReqBody
 from models.words import Words
@@ -130,10 +130,40 @@ async def image_translation(
         },
     }
 
+class LLMExplanationResponse(BaseModel):
+    """Response model for LLM explanation API"""
+
+    class MetadataModel(BaseModel):
+        """Metadata model for LLM explanation response"""
+        prompt_tokens: int
+        completion_tokens: int
+    
+    
+    class ResultModel(BaseModel):
+        """Result model for LLM explanation response"""
+
+        class DictionaryModel(BaseModel):
+            """Dictionary model for LLM explanation response"""
+            original: str
+            original_lang: str
+            translation: str
+            translation_lang: str
+        
+        class ExplanationModel(BaseModel):
+            """Explanation model for LLM explanation response"""
+            each_word: List[WordsExplanation]
+            entire_explanation: str
+
+        dictionary: DictionaryModel
+        explanation: ExplanationModel
+
+    message: str
+    metadata: MetadataModel
+    result: ResultModel
 
 # NOTE: we can hit this api multiple times to regenerate the entire explanation of the sentences.
 #       but the explanation for each word will only be explained once & does not replace existing words.
-@router.patch("/llm/{id}", status_code=status.HTTP_200_OK)
+@router.patch("/llm/{id}", status_code=status.HTTP_200_OK, response_model=LLMExplanationResponse)
 async def llm_explanation(
     id: int,
     db: Session = Depends(get_session),
