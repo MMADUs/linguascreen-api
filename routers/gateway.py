@@ -18,6 +18,8 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, status, Form, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from db import get_session
@@ -35,7 +37,21 @@ from security.jwt import get_current_user
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 
-@router.post("/translate", status_code=status.HTTP_200_OK)
+class TranslateResponseModel(BaseModel):
+    """Response model for translation API"""
+    class ResultModel(BaseModel):
+        """Result model for translation response"""
+
+        raw: str
+        result: str
+        from_language: str
+        to_language: str
+        score: float
+
+    message: str
+    result: ResultModel
+
+@router.post("/translate", status_code=status.HTTP_200_OK, response_model=TranslateResponseModel)
 async def translate(req_body: TranslationReqBody):
     """API for text translation only"""
     # translate
@@ -43,16 +59,19 @@ async def translate(req_body: TranslationReqBody):
         req_body.to_language, req_body.sentences
     )
     # return response
-    return {
-        "message": "successful text translation",
-        "result": {
-            "raw": translation_result.input_text,
-            "result": translation_result.translation,
-            "from_language": translation_result.detected_language,
-            "to_language": req_body.to_language,
-            "score": translation_result.score,
+    return JSONResponse(
+        content={
+            "message": "successful text translation",
+            "result": {
+                "raw": translation_result.input_text,
+                "result": translation_result.translation,
+                "from_language": translation_result.detected_language,
+                "to_language": req_body.to_language,
+                "score": translation_result.score,
+            },
         },
-    }
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @router.post("/ocr", status_code=status.HTTP_200_OK)
