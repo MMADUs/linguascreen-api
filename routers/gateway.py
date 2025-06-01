@@ -183,6 +183,7 @@ class LLMExplanationResponse(BaseModel):
             """Explanation model for LLM explanation response"""
             each_word: List[WordsExplanation]
             entire_explanation: str
+            romanization: str = ''
 
         dictionary: DictionaryModel
         explanation: ExplanationModel
