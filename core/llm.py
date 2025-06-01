@@ -54,6 +54,7 @@ def llm_explaination_service(original_sentence: str, translated_sentence: str, o
               The translated sentence is: {translated_sentence}.
               Please provide a simple and easy-to-understand explanation for both sentences.
               Provide an explanation for each word in the original sentence based on the context, and do not explain duplicated words.
+              You may merge words or kanjis or letters depending on the context when it comes to words_explanation.
               """)
     
     response = llm_client.beta.chat.completions.parse(
