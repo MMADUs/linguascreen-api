@@ -22,7 +22,13 @@ from sqlmodel import Session, select
 from config import settings
 from db import get_session
 
-from models.user import User, RegisterSchema, RegisterResponse, LoginSchema, LoginResponse
+from models.user import (
+    User,
+    RegisterSchema,
+    RegisterResponse,
+    LoginSchema,
+    LoginResponse,
+)
 
 from security.auth import authenticate_user, get_password_hash
 from security.jwt import create_access_token, get_current_user
@@ -30,7 +36,9 @@ from security.jwt import create_access_token, get_current_user
 router = APIRouter(tags=["authentication"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse)
+@router.post(
+    "/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse
+)
 def register(req_body: RegisterSchema, db: Session = Depends(get_session)):
     """Create a new user with hashed password"""
     # get user by email
@@ -74,7 +82,7 @@ async def login(req_body: LoginSchema, db: Session = Depends(get_session)):
             detail="Incorrect email or password",
         )
     # generate access token for session
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(days=settings.ACCESS_TOKEN_EXPIRE)
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )

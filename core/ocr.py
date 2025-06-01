@@ -22,6 +22,7 @@ from azure.ai.vision.imageanalysis.models import VisualFeatures, ImageAnalysisRe
 
 from .client import ocr_client
 
+
 class ImageOcrResponse:
     """Image Analysis Response Schema"""
 
@@ -42,14 +43,17 @@ class ImageOcrResponse:
             f"Metadata(width={self.width}, height={self.height})"
         )
 
+
 # TODO: integrate bounding box polygon information to ocr_service
 # TODO: implement auth when prod
 def raw_ocr_service(image_buffer: bytes) -> ImageAnalysisResult:
     """Raw response OCR Image to text api service"""
     try:
-        response = ocr_client.analyze(image_data=image_buffer, visual_features=[VisualFeatures.READ])
+        response = ocr_client.analyze(
+            image_data=image_buffer, visual_features=[VisualFeatures.READ]
+        )
         return response
-    
+
     except HttpResponseError as exception:
         print(f"raw error: {exception}")
         if exception.error is not None:

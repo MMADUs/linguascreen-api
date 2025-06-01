@@ -51,14 +51,16 @@ class LoginResponse(BaseModel):
 
         access_token: str
         token_type: str = "Bearer"
-        
+
     message: str
     result: TokenModel
+
 
 class RegisterSchema(UserBase):
     """Schema for user creation"""
 
     password: str
+
 
 class RegisterResponse(BaseModel):
     """Response model for user registration"""
@@ -66,8 +68,10 @@ class RegisterResponse(BaseModel):
     message: str
     result: UserBase
 
+
 class AuthResponse(BaseModel):
     """Response model for user authentication"""
 
     message: str
     result: UserBase
+

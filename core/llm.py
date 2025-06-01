@@ -29,7 +29,7 @@ class WordsExplanation(BaseModel):
     original_word: str
     translated_word: str
     explanation: str
-    romanization: str = ''
+    romanization: str = ""
 
 
 class FormatResponse(BaseModel):
@@ -47,8 +47,14 @@ class LLMResponse(FormatResponse):
     prompt_tokens: int
     completion_tokens: int
 
-def llm_explaination_service(original_sentence: str, translated_sentence: str, original_lang: str, target_lang: str):
-    prompt = (f"""
+
+def llm_explaination_service(
+    original_sentence: str,
+    translated_sentence: str,
+    original_lang: str,
+    target_lang: str,
+):
+    prompt = f"""
               You are a language expert, and your task is to explain the meaning of the given sentences in {target_lang.upper()} language.
               The original sentence is: {original_sentence}.
               The original sentence language is: {original_lang.upper()}.
@@ -57,8 +63,8 @@ def llm_explaination_service(original_sentence: str, translated_sentence: str, o
               Provide an explanation for each word in the original sentence based on the context, and do not explain duplicated words.
               You may merge words or kanjis or letters depending on the context when it comes to words_explanation.
               Provide romanization/pinyin/romaji/romaja as necessary.
-              """)
-    
+              """
+
     response = llm_client.beta.chat.completions.parse(
         messages=[
             {
@@ -75,7 +81,7 @@ def llm_explaination_service(original_sentence: str, translated_sentence: str, o
     base = choice.message.parsed
     if base is None:
         raise ValueError("LLM response parsing failed, no data returned")
-    
+
     return LLMResponse(
         words_explanation=base.words_explanation,
         entire_explanation=base.entire_explanation,

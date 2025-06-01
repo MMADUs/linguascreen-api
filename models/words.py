@@ -26,8 +26,10 @@ if TYPE_CHECKING:
 class WordsBase(SQLModel):
     """Base model for saved words"""
 
-    word: str
-    desc: str
+    original_word: str
+    translated_word: str
+    explanation: str
+    romanization: str = ""
     sentences_id: Optional[int] = Field(default=None, foreign_key="sentences.id")
 
 

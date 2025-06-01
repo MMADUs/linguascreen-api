@@ -80,8 +80,10 @@ def get_sentence_by_id(
         "words": [
             {
                 "id": word.id,
-                "word": word.word,
-                "desc": word.desc,
+                "original_word": word.original_word,
+                "translated_word": word.translated_word,
+                "explanation": word.explanation,
+                "romanization": word.romanization,
                 "sentences_id": word.sentences_id,
             }
             for word in sentence.words
