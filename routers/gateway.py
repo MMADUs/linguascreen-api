@@ -171,7 +171,11 @@ class LLMExplanationResponse(BaseModel):
     result: ResultModel
 
 
-@router.post("/save", status_code=status.HTTP_200_OK)
+class WordSavingResponse(BaseModel):
+    """Response model for Word Saving /save"""
+    message: str = "successfully saved to dictionary"
+
+@router.post("/save", status_code=status.HTTP_200_OK, response_model=WordSavingResponse)
 async def explain_and_save(
     req_body: ExplainRequestBody,
     db: Session = Depends(get_session),
@@ -213,7 +217,7 @@ async def explain_and_save(
     # commit changes
     db.commit()
     # return response
-    return {"message": "successful saving to dictionary"}
+    return {"message": "successfully saved to dictionary"}
 
 
 # Alternative simpler response format if you prefer
