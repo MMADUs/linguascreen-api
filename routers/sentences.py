@@ -22,15 +22,14 @@ from sqlalchemy.orm import selectinload
 from db import get_session
 
 from models.user import User
-from models.sentences import Sentences
+from models.sentences import Sentences, GetSentencesResponse
 from models.words import Words
 
 from security.jwt import get_current_user
 
 router = APIRouter(prefix="/sentence", tags=["saved sentences"])
 
-
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.get("/", status_code=status.HTTP_200_OK, response_model=GetSentencesResponse)
 def get_sentences(
     skip: int = 0,
     limit: int = 100,

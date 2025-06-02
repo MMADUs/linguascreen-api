@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from .words import Words
 
 
-class SentencesBase(SQLModel):
+class SentencesBase(SQLModel, BaseModel):
     """Base model for saved sentences"""
 
     original: str
@@ -49,3 +49,14 @@ class TranslationReqBody(BaseModel):
 
     to_language: str
     sentences: str
+
+class SentenceResponse(SentencesBase):
+    """Model for sentence when sent as a response body"""
+
+    id: int
+
+class GetSentencesResponse(BaseModel):
+    """Model for GET /sentence/ response body"""
+
+    message: str
+    result: List[SentenceResponse]
