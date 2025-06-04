@@ -21,6 +21,76 @@ from pydantic import BaseModel
 from .client import llm_client
 
 from models.words import WordsBase
+import json
+
+
+class BoundingPolygon(BaseModel):
+    """Bounding Polygon Model"""
+
+    x: float
+    y: float
+
+class OcrWord(BaseModel):
+    """OCR Word Model"""
+
+    text: str
+    bounding_polygon: List[BoundingPolygon]
+    confidence: float = 0.0  # Confidence score of the OCR word, default to 0.0
+
+class OcrLine(BaseModel):
+    """Line Model"""
+
+    text: str
+    bounding_polygon: List[BoundingPolygon]
+    words: List[OcrWord]
+
+class OcrData(BaseModel):
+    """OCR Data Model"""
+
+    lines: List[OcrLine]
+
+
+class OcrExtractedText(BaseModel):
+    """OCR Extracted Text Model"""
+
+    text: str
+
+
+def llm_ocr_selection_postprocessing_service(ocr_data: OcrData) -> str:
+    """LLM OCR Postprocessing Service"""
+
+    ocr_data_json = json.dumps(ocr_data.model_dump(mode="json"), ensure_ascii=False)
+
+    prompt = f"""
+You are an expert in OCR post-processing. Your primary goal is to reconstruct the text from the provided OCR data in its natural reading order.
+
+Extract the text make sure it sounds natural and coherent in its language. Read from right to left, left to right, top to bottom, or bottom to top depending on the language and context of the text.
+
+Process the following OCR data and reconstruct the text in its correct reading order as a single string:
+```json
+{ocr_data_json}
+```
+    """
+
+    response = llm_client.beta.chat.completions.parse(
+        messages=[
+            {
+                "role": "system",
+                "content": prompt,
+            },
+        ],
+        max_tokens=4096,
+        response_format=OcrExtractedText,
+        model="gpt-4.1",
+        temperature=1.0,
+    )
+
+    choice = response.choices[0]
+    base = choice.message.parsed
+    if base is None:
+        raise ValueError("LLM response parsing failed, no data returned")
+
+    return base.text
 
 
 class WordsExplanation(BaseModel):

@@ -31,8 +31,10 @@ from core.ocr import raw_ocr_service, ocr_service, ImageOcrResponse
 from core.llm import (
     llm_service,
     llm_explaination_service,
+    llm_ocr_selection_postprocessing_service,
     LLMResponse,
     WordsExplanation,
+    OcrData
 )
 
 from models.sentences import Sentences, TranslationReqBody
@@ -95,6 +97,31 @@ async def ocr(image: UploadFile = File(...)):
     # return response
     return {"message": "successful image analysis", "result": ocr_result}
 
+# TODO: clean up context for pydantic models
+
+class OcrSelectionPostprocessRequestBody(BaseModel):
+    """Request body for OCR selection postprocess"""
+
+    ocr_data: OcrData
+
+class OcrSelectionPostprocessResponse(BaseModel):
+    """Response model for OCR selection postprocess"""
+
+    message: str
+    result: str
+    
+@router.post("/ocr/selection/postprocess", status_code=status.HTTP_200_OK, response_model=OcrSelectionPostprocessResponse)
+async def ocr_selection_postprocess(
+    req_body: OcrSelectionPostprocessRequestBody,
+):
+    """API for OCR selection postprocess"""
+    text = llm_ocr_selection_postprocessing_service(
+        ocr_data=req_body.ocr_data,
+    )
+    return {
+        "message": "successful OCR selection postprocess",
+        "result": text,
+    }
 
 class ExplainRequestBody(BaseModel):
     """Request body for LLM explanation"""
