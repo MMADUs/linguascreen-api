@@ -61,15 +61,13 @@ def llm_ocr_selection_postprocessing_service(ocr_data: OcrData) -> str:
 
     ocr_data_json = json.dumps(ocr_data.model_dump(mode="json"), ensure_ascii=False)
 
-    prompt = f"""
+    prompt = """
 You are an expert in OCR post-processing. Your primary goal is to reconstruct the text from the provided OCR data in its natural reading order.
 
 Extract the text make sure it sounds natural and coherent in its language. Read from right to left, left to right, top to bottom, or bottom to top depending on the language and context of the text.
 
-Process the following OCR data and reconstruct the text in its correct reading order as a single string:
-```json
-{ocr_data_json}
-```
+You will receive OCR data in JSON format, which includes lines of text and their bounding polygons. 
+Your task is to process this data and return a single string that represents the reconstructed text in its correct reading order.
     """
 
     response = llm_client.beta.chat.completions.parse(
@@ -78,10 +76,14 @@ Process the following OCR data and reconstruct the text in its correct reading o
                 "role": "system",
                 "content": prompt,
             },
+            {
+                "role": "user",
+                "content": ocr_data_json,
+            }
         ],
         max_tokens=4096,
         response_format=OcrExtractedText,
-        model="gpt-4.1",
+        model="gpt-4o-mini-2",
         temperature=1.0,
     )
 
